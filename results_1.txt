@@ -1,0 +1,280 @@
+ Experimental Results for Multi-Emotion Classification 
+
+==================================================================
+DATABASE:
+
+1. FER2013 Single labelled 
+
+2. [:200]FER2013 Multi-Label WITH TWO EMOTIONS
+
+3. [:200]FER2013 Multi-Label WITH THREE Emotions
+
+4. FERG-DB single labeled AFA dataset over 50k images (pure single labelled)
+
+===================================================================
+
+## Benchmark + Proposed 
+“””
+Metric Reference:
+
+Example Based:
+
+	Hamming Loss: H
+	Average Precision: ACC
+	Coverage: C
+	Ranking Loss: RL
+	One-Error: OE
+
+Label Based:
+
+	Precision_Recall_F1_Macro: Macro(P/R/F1)
+	Precision_Recall_F1_Micro: Micro(P/R/F1)
+“””
+
+
+=================================================================================
+
+Training Routine:
+
+A.
+ Train with Single Label 
+
+ Test on Multi-label —— Test for algorithmic generalisation  
+
+
+=================================================================================
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+1. Adaptation Algorithm 
+
+A. MLkNN(Zhang & Zhou 2007) with K = 7 of classes: H:0.28642; ACC: 0.34618 ; C:7.0; RL: 0.95
+
+F1-micro/macro/samples/weighted: 0.0907/0.0625/0.066/0.0654;
+
+
+B. ML-ARAM: (Benites et al) Neurofuzzy classifier : H:0.37428; ACC: 0.3693 ; C:6.67; RL: 0.801
+
+F1-micro/macro/samples/weighted: 0.2640/0.2464/0.2421/0.2157;
+
+
+2. Problem Transformation 
+
+A. Binary Relevance with base classifier as SVC: H:0.27571; ACC: 0.3378 ; C:7.0; RL: 1
+
+F1-micro/macro/samples/weighted: none/none/none/none;[need to redo it]
+
+B. Label Powerset with base classifier as Gaussian Naive Bayes:  H: 0.32857 ;ACC: 0.3696 ; C:6.94; RL: 0.8375
+
+F1-micro/macro/samples/weighted: 0.2150/ 0.2011/0.2133/0.2056;
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+3. Stacked neural network(MLP and CNN) 
+
+A. MLP
+
+Structure: Dense > Dropout > Dense > Dropout > Dense(Output) with 50 epochs and batch size: 50(1500 iterations)
+
+H:0.40285; ACC: 0.37645 ; C:6.7; RL: 0.7613
+
+F1-micro/macro/samples/weighted: 0.282/0.262/0.2808/0.2579
+
+B. CNN
+
+Structure: Conv(3*3) > Conv() > Max Pooling > Dropout > Dense > Dropout > Dense
+
+H:0.3871; ACC: 0.3840 ; C:6.6; RL: 0.733
+
+F1-micro/macro/samples/weighted: 0.3104/0.2811/0.31/0.2865
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+4-1. BNN
+
+
+A. 	Priors: Normal
+	Model: Dense > Dense > Dense
+	output: no uncertainty measure
+	Iterations: 1500; same with NN
+
+	H:0.4042; ACC: 0.3602 ; C:6.5; RL: 0.7541
+
+	F1-micro/macro/samples/weighted: 0.2798/0.2435/0.2791/0.2550
+
+A-1.   Prior: Normal
+	Model: Dense > Dense > Dense
+	output: with pure uncertainty	
+	Iterations: 1500
+
+	H:0.3829; ACC:0.3891; C:6.5 RL:0.723
+	F1-micro/macro/samples/weighted:0.318/0.270/0.3175/0.2789
+
+A-2.   Prior: Normal
+	Model: Dense > Dense > Dense
+	output: with uncertainty plus
+
+	Iterations: 1500
+	
+	H:0.4028; ACC: 0.5259; C:6.673 RL:0.7591
+	F1-micro/macro/samples/weighted:0.2824/0.2988/0.2044/0.2816
+
+
+B. 	Priors: Hierarchical Uniform
+	Model: Dense > Dense > Dense
+	output: no uncertainty measure
+	Iterations: 1500
+
+	H:0.4142; ACC: 0.3535 ; C:6.75; RL: 0.7816
+
+	F1-micro/macro/samples/weighted: 0.3002/0.2784/0.2975/0.2852
+
+
+B-1.   BNN with Tailored Outputs[PPC.MEAN/PPC.STD]
+
+	Priors: Hierarchical Uniform 
+	Model: Dense > Dense > Dense
+	output: with uncertainty measure
+	Iterations: 1500
+
+	H:0.3857; ACC: 0.3896; C:6.45; RL: 0.7238
+
+	F1-micro/macro/samples/weighted: 0.3307/0.2214/0.3308/0.2457 [See the improvements over C-1 just using the PPC.std as final outputs]
+
+B-2.   Prior: Uniform
+	Model: Dense > Dense > Dense
+	output: with uncertainty plus
+	Iterations: 1500
+	
+	H:0.4042; ACC:0.5300 ; C: RL:0.7651
+	F1-micro/macro/samples/weighted:
+
+
+
+C. 	Priors: Hierarchical Cauchy 
+	Model: Dense > Dense > Dense
+	output: no uncertainty measure
+	Iterations: 1500
+
+	H:0.400; ACC: 0.3776 ; C:6.7; RL: 0.7593
+
+	F1-micro/macro/samples/weighted: 0.2849/0.2610/0.2833/0.2685
+
+
+
+C-1.	Priors: Hierarchical Cauchy 
+	Model: Dense > Dense > Dense
+	
+	output: with uncertainty measure only
+	Iterations: 1500
+
+	H:0.3828; ACC: 0.4024 ; C:6.525; RL: 0.7275
+	F1-micro/macro/samples/weighted: 0.3129/0.2794/0.31/0.2839
+
+C-2.	Priors: Hierarchical Cauchy 
+	Model: Dense > Dense > Dense
+	
+	output: with uncertainty plus (mean/std)
+	
+	H:0.4014; ACC: 0.5273 ; C:6.25; RL: 0.7406
+
+	F1-micro/macro/samples/weighted: 0.2900/0.1854/0.2916/0.2907
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+5.BCNN
+	
+A. 	Priors: Normal
+	Model: Conv(3*3) > Conv() > Max Pooling > Dropout > Dense > Dropout > Dense
+
+	output: no uncertainty measure
+	Iterations: 1500; same with NN
+
+	H:0.4214; ACC:0.3847; C:6.75; RL: 0.7911
+
+	F1-micro/macro/samples/weighted: 0.2498/0.2435/0.2791/0.2550
+
+A-1.   Prior: Normal
+	Model: Conv(3*3) > Conv() > Max Pooling > Dropout > Dense > Dropout > Dense
+	output: with pure uncertainty	
+	
+	Iterations: 1500
+
+	H:0.3842; ACC:0.4487; C:6.7 RL:0.7373
+	F1-micro/macro/samples/weighted:0.318/0.270/0.3175/0.2789
+
+A-2.   Prior: Normal
+	Model: Conv(3*3) > Conv() > Max Pooling > Dropout > Dense > Dropout > Dense
+	output: with uncertainty plus
+
+	Iterations: 1500
+	
+	H:0.40; ACC: 0.5813; C:6.675 RL:0.7505
+	F1-micro/macro/samples/weighted:0.2875/0.1586/0.2900/0.2816
+
+
+
+B. 	Priors: Hierarchical Uniform
+	Model: Dense > Dense > Dense
+	output: no uncertainty measure
+	Iterations: 1500
+
+	H:0.4028; ACC: 0.4214 ; C:6.675; RL: 0.7615
+
+	F1-micro/macro/samples/weighted: 0.2824/0.2284/0.2375/0.28
+
+
+B-1.   BNN with Tailored Outputs[PPC.MEAN/PPC.STD]
+
+	Priors: Hierarchical Uniform 
+	Model: Dense > Dense > Dense
+	output: with uncertainty measure
+	Iterations: 1500
+
+	H:0.4042; ACC: 0.3113; C:6.8; RL: 0.7685
+
+	F1-micro/macro/samples/weighted: 0.2798/0.2714/0.3308/0.2457 
+
+B-2.   Prior: Uniform
+	Model: Dense > Dense > Dense
+	output: with uncertainty plus
+	Iterations: 1500
+	
+	H:0.3871; ACC:0.5271 ; C:6.725 RL:0.7356
+	F1-micro/macro/samples/weighted:0.31/0.31
+
+C. 	Priors: Hierarchical Cauchy 
+	Model: Dense > Dense > Dense
+	
+	output: no uncertainty measure
+	Iterations: 1500
+
+	H:0.4014; ACC:0.4161  ; C:6.675; RL: 0.7595
+
+	F1-micro:0.2849
+
+
+C-1.	Priors: Hierarchical Cauchy 
+	Model: Dense > Dense > Dense
+	
+	output: with uncertainty measure only
+	Iterations: 1500
+
+	H:0.3957; ACC:0.3894 ; C:6.8; RL:0.7533 
+	F1-micro:0.322
+
+C-2.	Priors: Hierarchical Cauchy 
+	Model: Dense > Dense > Dense
+	
+	output: with uncertainty plus (mean/std)
+	
+	
+	H:0.4014; ACC:0.5758 ; C:6.75; RL:0.758 
+
+	F1-micro:0.2849
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Part B. Training Routine 
+
+
